@@ -1,6 +1,6 @@
 name: "🐛 Bug Report / Error Code"
 description: Сообщить об ошибке или сбое в работе редактора
-title: "[BUG]: "
+title: '[BUG]: '
 labels: ["bug"]
 body:
   - type: markdown
