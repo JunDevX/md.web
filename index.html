@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>md.web</title>
+    <style>
+        /* ========================================== */
+        /* --- СИСТЕМНЫЕ БАЗОВЫЕ СТИЛИ (RESET) ------ */
+        /* ========================================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+        .hidden { display: none !important; }
+
+        /* ========================================== */
+        /* --- ЭКРАН ВЫБОРА РЕЖИМА ПРИ ЗАХОДЕ -------- */
+        /* ========================================== */
+        #format-selector {
+            text-align: center;
+            padding: 30px;
+            background: #0a0a0c;
+            border: 1px solid #1c1c1e;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+        #format-selector h1 {
+            font-size: 22px;
+            margin-bottom: 24px;
+            font-weight: 400;
+            letter-spacing: -0.5px;
+            color: #aeaeab;
+        }
+        .mode-btn {
+            display: inline-block;
+            width: 150px;
+            padding: 16px;
+            margin: 8px;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-fie { background-color: #ffffff; color: #000000; border: 1px solid #dddddd; }
+        .btn-gs { background-color: #1c1c1e; color: #ffffff; border: 1px solid #2c2c2e; }
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+        }
+
+        /* ========================================== */
+        /* --- СТИЛЬ GS26 (СОВРЕМЕННЫЙ OLED / iOS) -- */
+        /* ========================================== */
+        .theme-gs26 {
+            width: 100%;
+            max-width: 850px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            opacity: 0;
+            transform: scale(0.98);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        .theme-gs26.active-view {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        /* Поиск GS26 */
+        .gs-search-box {
+            width: 100%;
+            padding: 16px;
+            background-color: #121214;
+            border: 1px solid #222224;
+            border-radius: 14px;
+            color: #ffffff;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        .gs-search-box:focus { border-color: #444446; }
+
+        /* Поисковая выдача */
+        .search-results-panel {
+            background-color: #121214;
+            border: 1px solid #222224;
+            border-radius: 16px;
+            padding: 12px;
+            max-height: 260px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .cheat-card {
+            background-color: #1c1c1e;
+            border: 1px solid #2c2c2e;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        .cheat-info { flex: 1; }
+        .cheat-title { font-size: 14px; font-weight: 600; color: #ffffff; margin-bottom: 4px; }
+        .cheat-desc { font-size: 12px; color: #8e8e93; }
+        .cheat-syntax { font-family: monospace; font-size: 12px; color: #ffb347; background: #2c2c2e; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; }
+        
+        /* Картонная шняга MADE IN USA */
+        .cardboard-badge {
+            background-color: #d2b48c;
+            color: #3e2723;
+            border: 2px dashed #8d6e63;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-family: "Courier New", monospace;
+            font-weight: bold;
+            font-size: 12px;
+            display: inline-block;
+        }
+        .btn-insert {
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        /* iOS Сегментированный контроллер */
+        .ios-tab-container {
+            background-color: #121214;
+            border: 1px solid #222224;
+            border-radius: 99px;
+            padding: 4px;
+            display: flex;
+            position: relative;
+        }
+        .ios-tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            border-radius: 99px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            color: #8e8e93;
+            z-index: 2;
+            transition: color 0.3s ease;
+            user-select: none;
+        }
+        .ios-tab.active { color: #ffffff; }
+        
+        /* Активная подложка таба */
+        .ios-slider {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: calc(50% - 4px);
+            height: calc(100% - 8px);
+            background-color: #2c2c2e;
+            border-radius: 99px;
+            z-index: 1;
+            transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+
+        /* Анимированные панели */
+        .gs-view-wrapper {
+            position: relative;
+            width: 100%;
+            height: 450px;
+            perspective: 1000px;
+        }
+        .gs-panel {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #121214;
+            border: 1px solid #222224;
+            border-radius: 20px;
+            padding: 20px;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            pointer-events: none;
+            transform: translate3d(30px, 0, 0);
+            transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .gs-panel.panel-active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate3d(0, 0, 0);
+        }
+        .gs-panel.panel-exit {
+            opacity: 0;
+            pointer-events: none;
+            transform: translate3d(-30px, 0, 0);
+        }
+
+        /* Текстовые модули */
+        .gs-textarea {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-family: "SF Mono", Monaco, Consolas, monospace;
+            font-size: 15px;
+            resize: none;
+            outline: none;
+            line-height: 1.6;
+        }
+        .gs-preview {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            color: #e5e5ea;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        /* Рендеринг разметки Live */
+        .gs-preview h1 { font-size: 1.8em; margin: 10px 0; border-bottom: 1px solid #222224; padding-bottom: 6px; color: #fff;}
+        .gs-preview h2 { font-size: 1.4em; margin: 12px 0 8px 0; color: #fff;}
+        .gs-preview h3 { font-size: 1.2em; margin: 10px 0 6px 0; }
+        .gs-preview p { margin-bottom: 14px; color: #d1d1d6; }
+        .gs-preview code { background: #222224; padding: 3px 6px; border-radius: 6px; font-family: monospace; font-size: 13px; color: #ffb347;}
+        .gs-preview pre { background: #1c1c1e; padding: 14px; border-radius: 10px; overflow-x: auto; margin-bottom: 14px; border: 1px solid #222224;}
+        .gs-preview pre code { background: transparent; padding: 0; color: #e5e5ea; }
+        .gs-preview blockquote { border-left: 4px solid #48484a; padding-left: 14px; color: #8e8e93; margin: 14px 0; }
+        .gs-preview ul, .gs-preview ol { padding-left: 20px; margin-bottom: 14px; }
+        .gs-preview li { margin-bottom: 4px; }
+        .gs-preview a { color: #0a84ff; text-decoration: none; }
+        .gs-preview a:hover { text-decoration: underline; }
+
+        /* ========================================== */
+        /* --- СТИЛЬ FIE11 (СУПЕР ПРОСТОЙ БЕЛОСНЕЖНЫЙ) - */
+        /* ========================================== */
+        .theme-fie11 {
+            width: 100%;
+            max-width: 900px;
+            background-color: #ffffff;
+            color: #000000;
+            padding: 30px;
+            border-radius: 0px;
+            box-shadow: none;
+            font-family: Arial, sans-serif;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .theme-fie11.active-view { opacity: 1; }
+
+        .fie-nav-container {
+            margin-bottom: 20px;
+        }
+        .fie-search-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #cccccc;
+            background: #ffffff;
+            color: #000000;
+            margin-bottom: 10px;
+        }
+        .fie-results {
+            border: 1px solid #cccccc;
+            background: #f9f9f9;
+            padding: 10px;
+            margin-bottom: 15px;
+            max-height: 200px;
+            overflow-y: scroll;
+        }
+        .fie-item {
+            padding: 8px 0;
+            border-bottom: 1px dashed #cccccc;
+        }
+        
+        .fie-grid {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .fie-col {
+            width: 50%;
+            vertical-align: top;
+            padding: 0 15px 0 0;
+        }
+        .fie-col:last-child {
+            padding: 0 0 0 15px;
+            border-left: 1px solid #eeeeee;
+        }
+        .fie-label {
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            color: #666666;
+        }
+        .fie-editor {
+            width: 100%;
+            height: 380px;
+            padding: 10px;
+            font-family: Courier New, monospace;
+            font-size: 14px;
+            border: 1px solid #cccccc;
+            resize: none;
+        }
+        .fie-view {
+            width: 100%;
+            height: 380px;
+            padding: 10px;
+            border: 1px solid #cccccc;
+            overflow-y: scroll;
+            background: #ffffff;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .fie-view h1 { font-size: 20px; margin: 10px 0; border-bottom: 1px solid #ccc; }
+        .fie-view h2 { font-size: 17px; margin: 10px 0; }
+        .fie-view p { margin-bottom: 10px; }
+        .fie-view blockquote { border-left: 3px solid #999; padding-left: 10px; color: #555; }
+        .fie-view code { background: #eee; padding: 2px 4px; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+    <!-- ВЫБОР ФОРМАТА -->
+    <div id="format-selector">
+        <h1>Выберите формат интерфейса / Select Format</h1>
+        <button class="mode-btn btn-fie" onclick="activateMode('fie11')">FIE11</button>
+        <button class="mode-btn btn-gs" onclick="activateMode('gs26')">GS26</button>
+    </div>
+
+    <!-- ИНТЕРФЕЙС GS26 (СОВРЕМЕННЫЙ OLED) -->
+    <div id="app-gs26" class="theme-gs26 hidden">
+        <input type="text" id="gs-search" class="gs-search-box" placeholder="Поиск элементов спецификации Markdown..." oninput="triggerSearch('gs')">
+        
+        <div id="gs-search-results" class="search-results-panel hidden"></div>
+
+        <div class="ios-tab-container">
+            <div id="tab-gs-write" class="ios-tab active" onclick="navigateToTab('write')">Write</div>
+            <div id="tab-gs-live" class="ios-tab" onclick="navigateToTab('live')">Live</div>
+            <div id="ios-slider" class="ios-slider"></div>
+        </div>
+
+        <div class="gs-view-wrapper">
+            <div id="panel-gs-write" class="gs-panel panel-active">
+                <textarea id="gs-input" class="gs-textarea" placeholder="Пишите Markdown здесь..." oninput="handleInput('gs')"># Редактор разметки
+Добро пожаловать в генератор разметки.
+
+## Примеры элементов:
+* Попробуйте найти фразу **MADE IN USA** через верхний поиск.
+* Поддерживаются стандартные элементы списков, `код`, и цитаты.
+
+> Умная синхронизация контента работает на лету.</textarea>
+            </div>
+            <div id="panel-gs-live" class="gs-panel">
+                <div id="gs-preview" class="gs-preview"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ИНТЕРФЕЙС FIE11 (БЕЛОСНЕЖНЫЙ МИНИМАЛИЗМ) -->
+    <div id="app-fie11" class="theme-fie11 hidden">
+        <div class="fie-nav-container">
+            <input type="text" id="fie-search" class="fie-search-input" placeholder="Поиск по базе Markdown..." oninput="triggerSearch('fie')">
+            <div id="fie-search-results" class="fie-results hidden"></div>
+        </div>
+
+        <table class="fie-grid">
+            <tr>
+                <td class="fie-col">
+                    <div class="fie-label">Write</div>
+                    <textarea id="fie-input" class="fie-editor" oninput="handleInput('fie')"># FIE11 Режим
+Супер простой белый дизайн. Все элементы управления оптимизированы для старых систем.
+
+## Базовые теги:
+* Работает без сбоев
+* Полный параллельный контроль</textarea>
+                </td>
+                <td class="fie-col">
+                    <div class="fie-label">Live</div>
+                    <div id="fie-preview" class="fie-view"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        // БАЗА ДАННЫХ MARKDOWN СЛОВАРЯ
+        var markdownDatabase = [
+            {
+                keywords: ["made in usa", "сша", "картон", "производство", "badge"],
+                title: "MADE IN USA (Специфичный картонный блок)",
+                desc: "Декоративный элемент с песочным фоном и прерывистой границей.",
+                syntax: '<div class="cardboard-badge">★ MADE IN USA ★</div>',
+                raw: '<div style="background:#d2b48c; color:#3e2723; border:2px dashed #8d6e63; padding:6px 12px; font-family:monospace; font-weight:bold; display:inline-block;">★ MADE IN USA ★</div>'
+            },
+            {
+                keywords: ["заголовок", "h1", "h2", "h3", "header", "#"],
+                title: "Заголовки (Headings)",
+                desc: "Создаются с помощью знака # в начале строки.",
+                syntax: "# Заголовок 1\n## Заголовок 2",
+                raw: "# Заголовок 1\n## Заголовок 2"
+            },
+            {
+                keywords: ["жирный", "выделение", "bold", "strong"],
+                title: "Жирный текст (Bold)",
+                desc: "Выделение текста двумя звездочками с обеих сторон.",
+                syntax: "**Жирный текст**",
+                raw: "**Жирный текст**"
+            },
+            {
+                keywords: ["курсив", "наклонный", "italic", "em"],
+                title: "Курсив (Italic)",
+                desc: "Выделение текста одной звездочкой.",
+                syntax: "*Курсивный текст*",
+                raw: "*Курсивный текст*"
+            },
+            {
+                keywords: ["список", "маркер", "list", "ul", "ol"],
+                title: "Списки (Lists)",
+                desc: "Ненумерованные списки используют звездочку (*), нумерованные — цифры с точкой.",
+                syntax: "* Элемент\n1. Первый",
+                raw: "* Элемент 1\n* Элемент 2"
+            },
+            {
+                keywords: ["код", "строка кода", "code", "pre"],
+                title: "Код и Блоки (Code)",
+                desc: "Одиночные символы ` для строки, тройные блоки ``` для кода.",
+                syntax: "`code` или ```javascript ... ```",
+                raw: "```javascript\nconsole.log('Hello');\n```"
+            },
+            {
+                keywords: ["цитата", "выделение", "quote", "blockquote"],
+                title: "Цитаты (Blockquotes)",
+                desc: "Используется символ '>' в начале абзаца.",
+                syntax: "> Это цитируемый текст",
+                raw: "> Это цитируемый текст"
+            },
+            {
+                keywords: ["ссылка", "url", "link"],
+                title: "Гиперссылки (Links)",
+                desc: "Текст в квадратных скобках, адрес в круглых.",
+                syntax: "[Google](https://google.com)",
+                raw: "[Google](https://google.com)"
+            }
+        ];
+
+        var activeMode = 'gs26';
+
+        function activateMode(mode) {
+            activeMode = mode;
+            document.getElementById('format-selector').className = 'hidden';
+            
+            if (mode === 'gs26') {
+                var app = document.getElementById('app-gs26');
+                app.className = 'theme-gs26';
+                setTimeout(function() { app.classList.add('active-view'); }, 50);
+                document.body.style.backgroundColor = '#000000';
+                handleInput('gs');
+            } else {
+                var app = document.getElementById('app-fie11');
+                app.className = 'theme-fie11';
+                setTimeout(function() { app.classList.add('active-view'); }, 50);
+                document.body.style.backgroundColor = '#ffffff';
+                handleInput('fie');
+            }
+        }
+
+        function navigateToTab(target) {
+            var slider = document.getElementById('ios-slider');
+            var tabWrite = document.getElementById('tab-gs-write');
+            var tabLive = document.getElementById('tab-gs-live');
+            var panelWrite = document.getElementById('panel-gs-write');
+            var panelLive = document.getElementById('panel-gs-live');
+
+            if (target === 'write') {
+                slider.style.transform = 'translate3d(0, 0, 0)';
+                tabWrite.classList.add('active');
+                tabLive.classList.remove('active');
+                panelLive.classList.remove('panel-active');
+                panelLive.classList.add('panel-exit');
+                setTimeout(function() {
+                    panelWrite.classList.remove('panel-exit');
+                    panelWrite.classList.add('panel-active');
+                }, 50);
+            } else {
+                slider.style.transform = 'translate3d(100%, 0, 0)';
+                tabLive.classList.add('active');
+                tabWrite.classList.remove('active');
+                panelWrite.classList.remove('panel-active');
+                panelWrite.classList.add('panel-exit');
+                setTimeout(function() {
+                    panelLive.classList.remove('panel-exit');
+                    panelLive.classList.add('panel-active');
+                }, 50);
+                handleInput('gs');
+            }
+        }
+
+        function triggerSearch(type) {
+            var inputVal = document.getElementById(type + '-search').value.toLowerCase().trim();
+            var resultsDiv = document.getElementById(type + '-search-results');
+
+            if (!inputVal) {
+                resultsDiv.classList.add('hidden');
+                resultsDiv.style.display = 'none';
+                return;
+            }
+
+            var matched = markdownDatabase.filter(function(item) {
+                return item.keywords.some(function(k) { return k.indexOf(inputVal) !== -1; }) || 
+                       item.title.toLowerCase().indexOf(inputVal) !== -1;
+            });
+
+            if (matched.length > 0) {
+                var nodesHtml = '';
+                for (var i = 0; i < matched.length; i++) {
+                    var current = matched[i];
+                    if (type === 'gs') {
+                        nodesHtml += '<div class="cheat-card">';
+                        nodesHtml += '  <div class="cheat-info">';
+                        nodesHtml += '    <div class="cheat-title">' + current.title + '</div>';
+                        nodesHtml += '    <div class="cheat-desc">' + current.desc + '</div>';
+                        if (current.keywords.includes("made in usa")) {
+                            nodesHtml += '    <div style="margin-top:6px;">' + current.syntax + '</div>';
+                        } else {
+                            nodesHtml += '    <div class="cheat-syntax">' + escapeHtmlChar(current.syntax) + '</div>';
+                        }
+                        nodesHtml += '  </div>';
+                        nodesHtml += '  <button class="btn-insert" onclick="pasteTemplate(\'gs\', `' + current.raw.replace(/`/g, '\\`') + '`)">Вставить</button>';
+                        nodesHtml += '</div>';
+                    } else {
+                        nodesHtml += '<div class="fie-item">';
+                        nodesHtml += '  <strong>' + current.title + '</strong> - ' + current.desc + '<br>';
+                        nodesHtml += '  <code style="background:#eee;padding:2px 4px;">' + escapeHtmlChar(current.syntax) + '</code> ';
+                        nodesHtml += '  <button style="padding:2px 6px;font-size:11px;cursor:pointer;" onclick="pasteTemplate(\'fie\', `' + current.raw.replace(/`/g, '\\`') + '`)">Вставить</button>';
+                        nodesHtml += '</div>';
+                    }
+                }
+                resultsDiv.innerHTML = nodesHtml;
+                resultsDiv.classList.remove('hidden');
+                resultsDiv.style.display = 'block';
+            } else {
+                resultsDiv.innerHTML = '<div style="padding:10px; color:#8e8e93; font-size:13px;">Ничего не найдено</div>';
+                resultsDiv.classList.remove('hidden');
+                resultsDiv.style.display = 'block';
+            }
+        }
+
+        function escapeHtmlChar(string) {
+            return string.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function pasteTemplate(type, rawData) {
+            var area = document.getElementById(type + '-input');
+            var cursorStart = area.selectionStart;
+            var cursorEnd = area.selectionEnd;
+            var oldText = area.value;
+
+            area.value = oldText.substring(0, cursorStart) + "\n" + rawData + "\n" + oldText.substring(cursorEnd);
+            handleInput(type);
+
+            document.getElementById(type + '-search').value = '';
+            var r = document.getElementById(type + '-search-results');
+            r.classList.add('hidden');
+            r.style.display = 'none';
+        }
+
+        function internalMarkdownEngine(text) {
+            var out = text;
+            out = out.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            out = out.replace(/&lt;div class="cardboard-badge"&gt;([\s\S]*?)&lt;\/div&gt;/g, '<div class="cardboard-badge">$1</div>');
+            out = out.replace(/&lt;div style="([\s\S]*?)"&gt;([\s\S]*?)&lt;\/div&gt;/g, '<div style="$1">$2</div>');
+            out = out.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+            out = out.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+            out = out.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+            out = out.replace(/^\&gt; (.*$)/gim, '<blockquote>$1</blockquote>');
+            out = out.replace(/^\* (.*$)/gim, '<ul><li>$1</li></ul>');
+            out = out.replace(/<\/ul>\s*<ul>/g, '');
+            out = out.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            out = out.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            out = out.replace(/\`\`\`([\s\S]*?)\`\`\`/g, '<pre><code>$1</code></pre>');
+            out = out.replace(/\`(.*?)\`/g, '<code>$1</code>');
+            out = out.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
+            out = out.replace(/\n/g, '<br>');
+            return out;
+        }
+
+        function handleInput(type) {
+            var src = document.getElementById(type + '-input').value;
+            var targetElement = document.getElementById(type + '-preview');
+            targetElement.innerHTML = internalMarkdownEngine(src);
+        }
+    </script>
+</body>
+</html>
