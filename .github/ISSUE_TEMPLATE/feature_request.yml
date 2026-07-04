@@ -1,0 +1,40 @@
+name: "💡 Feature Request / Idea Code"
+description: Предложить идею или улучшение для дальнейшего обновления ПО
+title: "[IDEA]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        У вас есть отличная идея по оптимизации или добавлению новых фич? Мы с радостью её рассмотрим!
+  - type: input
+    id: idea_title
+    attributes:
+      label: 🎯 Название идеи / Idea Code
+      description: Кратко назовите вашу фичу или предложите кодовое имя для обновления.
+      placeholder: например, OLED black dark mode optimization / Liquid Glass UI
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: ❓ Какую проблему это решает?
+      description: С какими трудностями вы сталкиваетесь сейчас или чего не хватает для максимальной производительности?
+      placeholder: Текущая светлая тема слишком сильно расходует заряд батареи / Потребляет много RAM при загрузке больших файлов.
+    validations:
+      required: true
+  - type: textarea
+    id: implementation
+    attributes:
+      label: 🚀 Как это должно работать?
+      description: Опишите логику работы, минималистичные элементы интерфейса или расположение кнопок.
+      placeholder: Добавить переключатель в стиле Material 3, который полностью отключает лишние визуальные эффекты для слабых устройств.
+    validations:
+      required: true
+  - type: textarea
+    id: additional
+    attributes:
+      label: 🎨 Дополнительные референсы / Скетчи
+      description: Ссылки, примеры интерфейсов (Nothing OS, Material 3) или любые наброски.
+    validations:
+      required: false
