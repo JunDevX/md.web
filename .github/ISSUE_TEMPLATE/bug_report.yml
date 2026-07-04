@@ -1,0 +1,62 @@
+name: "🐛 Bug Report / Error Code"
+description: Сообщить об ошибке или сбое в работе редактора
+title: "[BUG]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Спасибо, что помогаете делать проект лучше! Заполните форму ниже, чтобы мы могли быстрее разобраться с проблемой.
+  - type: textarea
+    id: description
+    attributes:
+      label: 🛑 Описание ошибки
+      description: Кратко опишите, что именно пошло не так.
+      placeholder: Например: При переключении в режим предпросмотра ломается разметка...
+    validations:
+      required: true
+  - type: input
+    id: error_code
+    attributes:
+      label: 🔢 Код ошибки (Error Code)
+      description: Если в консоли или интерфейсе отобразился конкретный код ошибки, укажите его здесь.
+      placeholder: например, ERR_RENDER_OLED_404
+    validations:
+      required: false
+  - type: textarea
+    id: steps
+    attributes:
+      label: 🔄 Шаги для воспроизведения
+      description: Пошагово опишите, как воспроизвести эту проблему.
+      placeholder: |
+        1. Открыть редактор...
+        2. Вставить текст...
+        3. Нажать кнопку...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 📉 Ожидаемое поведение
+      description: Что должно было произойти вместо ошибки?
+      placeholder: Интерфейс должен корректно отобразить Markdown разметку без лагов.
+    validations:
+      required: false
+  - type: textarea
+    id: environment
+    attributes:
+      label: 💻 Окружение и системные данные
+      description: Информация о вашей системе (ОС, браузер, производительность).
+      placeholder: |
+        - ОС: Windows 10
+        - Браузер: Chrome
+    validations:
+      required: true
+  - type: textarea
+    id: logs_screenshots
+    attributes:
+      label: 📷 Скриншоты или Логи
+      description: Сюда можно перетащить скриншоты или вставить логи из консоли разработчика (F12).
+      placeholder: Перетащите файлы или вставьте текст логов...
+    validations:
+      required: false
