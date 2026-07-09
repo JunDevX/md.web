@@ -23,6 +23,8 @@
             align-items: center;
             justify-content: center;
             overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
+            position: relative;
         }
         .hidden { display: none !important; }
 
@@ -206,6 +208,8 @@
             pointer-events: none;
             transform: translate3d(30px, 0, 0);
             transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex;
+            flex-direction: column;
         }
         .gs-panel.panel-active {
             opacity: 1;
@@ -218,18 +222,42 @@
             transform: translate3d(-30px, 0, 0);
         }
 
+        /* Контейнер редактора с подсветкой */
+        .editor-container {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            overflow: hidden;
+        }
+
         /* Текстовые модули */
-        .gs-textarea {
+        .gs-textarea, .backdrop-highlight {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             background: transparent;
             border: none;
-            color: #ffffff;
             font-family: "SF Mono", Monaco, Consolas, monospace;
             font-size: 15px;
             resize: none;
             outline: none;
             line-height: 1.6;
+            padding: 0;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .gs-textarea {
+            color: transparent;
+            caret-color: #ffffff;
+            z-index: 2;
+        }
+        .backdrop-highlight {
+            color: #ffffff;
+            z-index: 1;
+            pointer-events: none;
         }
         .gs-preview {
             width: 100%;
@@ -246,13 +274,162 @@
         .gs-preview h3 { font-size: 1.2em; margin: 10px 0 6px 0; }
         .gs-preview p { margin-bottom: 14px; color: #d1d1d6; }
         .gs-preview code { background: #222224; padding: 3px 6px; border-radius: 6px; font-family: monospace; font-size: 13px; color: #ffb347;}
-        .gs-preview pre { background: #1c1c1e; padding: 14px; border-radius: 10px; overflow-x: auto; margin-bottom: 14px; border: 1px solid #222224;}
+        .gs-preview pre { position: relative; background: #1c1c1e; padding: 14px; border-radius: 10px; overflow-x: auto; margin-bottom: 14px; border: 1px solid #222224;}
         .gs-preview pre code { background: transparent; padding: 0; color: #e5e5ea; }
         .gs-preview blockquote { border-left: 4px solid #48484a; padding-left: 14px; color: #8e8e93; margin: 14px 0; }
         .gs-preview ul, .gs-preview ol { padding-left: 20px; margin-bottom: 14px; }
         .gs-preview li { margin-bottom: 4px; }
         .gs-preview a { color: #0a84ff; text-decoration: none; }
         .gs-preview a:hover { text-decoration: underline; }
+
+        /* Подсветка синтаксиса в Write */
+        .hl-header { color: #ffb347; font-weight: bold; }
+        .hl-list { color: #64d2ff; }
+        .hl-code { color: #bf5af2; font-family: monospace; }
+        .hl-bold { color: #ff453a; font-weight: bold; }
+        .hl-italic { color: #30d158; font-style: italic; }
+
+        /* Панель инструментов экспорта и тем */
+        .gs-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #121214;
+            border: 1px solid #222224;
+            border-radius: 14px;
+            padding: 10px 16px;
+        }
+        .gs-toolbar-group {
+            display: flex;
+            gap: 8px;
+        }
+        .toolbar-btn {
+            background-color: #1c1c1e;
+            color: #ffffff;
+            border: 1px solid #2c2c2e;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .toolbar-btn:hover {
+            background-color: #2c2c2e;
+            transform: translateY(-1px);
+        }
+        .toolbar-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        /* Кнопка копирования в превью блоках */
+        .pre-copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #2c2c2e;
+            color: #ffffff;
+            border: 1px solid #3c3c3e;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 11px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .gs-preview pre:hover .pre-copy-btn {
+            opacity: 1;
+        }
+        .pre-copy-btn:hover {
+            background: #3c3c3e;
+        }
+
+        /* Модалка магазина тем */
+        .theme-market-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .theme-market-modal.active {
+            opacity: 1; pointer-events: auto;
+        }
+        .theme-market-content {
+            background: #121214;
+            border: 1px solid #222224;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            padding: 24px;
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+        }
+        .theme-market-modal.active .theme-market-content {
+            transform: scale(1);
+        }
+        .theme-market-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+        }
+        .theme-market-close {
+            background: transparent; border: none; color: #8e8e93; cursor: pointer; font-size: 20px;
+        }
+        .btn-big-action {
+            width: 100%;
+            padding: 16px;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+        }
+        .btn-big-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255,255,255,0.2);
+        }
+
+        /* Кнопка GitHub в правом нижнем углу */
+        .github-sticky-link {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 44px;
+            height: 44px;
+            background-color: #1c1c1e;
+            border: 1px solid #2c2c2e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            transition: all 0.2s ease;
+            z-index: 90;
+        }
+        .github-sticky-link:hover {
+            transform: scale(1.1);
+            background-color: #2c2c2e;
+            color: #ffffff;
+        }
+        .github-sticky-link svg {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+        }
 
         /* ========================================== */
         /* --- СТИЛЬ FIE11 (СУПЕР ПРОСТОЙ БЕЛОСНЕЖНЫЙ) - */
@@ -345,6 +522,11 @@
 </head>
 <body>
 
+    <!-- ЗНАЧОК GITHUB СНИЗУ СПРАВА -->
+    <a href="https://github.com/JunDevX/md.web" target="_blank" class="github-sticky-link" title="Открыть репозиторий проекта">
+        <svg viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
+    </a>
+
     <!-- ВЫБОР ФОРМАТА -->
     <div id="format-selector">
         <h1>Выберите формат интерфейса / Select Format</h1>
@@ -358,15 +540,33 @@
         
         <div id="gs-search-results" class="search-results-panel hidden"></div>
 
+        <!-- Тулбар экспорта и тем -->
+        <div class="gs-toolbar">
+            <div class="gs-toolbar-group">
+                <button class="toolbar-btn" onclick="openThemeMarket()">
+                    <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-10 10c0 5.523 4.477 10 10 10a9.96 9.96 0 0 0 6.33-2.274 1 1 0 0 0-.256-1.644l-.454-.227a4 4 0 0 1-2.21-3.585V13a2 2 0 0 0-2-2h-2a1 1 0 0 1-1-1V8a2 2 0 0 0-2-2h-.5a1 1 0 0 1-1-1V4.5A1.5 1.5 0 0 1 9.5 3h1a1.5 1.5 0 0 1 1.5 1.5V5a1 1 0 0 0 1 1h1a3 3 0 0 1 3 3v.25a1 1 0 0 0 .316.725l1.342 1.254A4.966 4.966 0 0 1 22 12A10 10 0 0 0 12 2Z"/></svg>
+                    Магазин тем
+                </button>
+            </div>
+            <div class="gs-toolbar-group">
+                <button class="toolbar-btn" onclick="exportFile('md')">Скачать .md</button>
+                <button class="toolbar-btn" onclick="exportFile('html')">Скачать .html</button>
+                <button class="toolbar-btn" onclick="copyRenderedHTML()">Копировать HTML</button>
+            </div>
+        </div>
+
         <div class="ios-tab-container">
             <div id="tab-gs-write" class="ios-tab active" onclick="navigateToTab('write')">Write</div>
             <div id="tab-gs-live" class="ios-tab" onclick="navigateToTab('live')">Live</div>
             <div id="ios-slider" class="ios-slider"></div>
         </div>
 
+        <!-- Контейнеры окон -->
         <div class="gs-view-wrapper">
             <div id="panel-gs-write" class="gs-panel panel-active">
-                <textarea id="gs-input" class="gs-textarea" placeholder="Пишите Markdown здесь..." oninput="handleInput('gs')"># Редактор разметки
+                <div class="editor-container">
+                    <div id="gs-highlight-single" class="backdrop-highlight"></div>
+                    <textarea id="gs-input" class="gs-textarea" placeholder="Пишите Markdown здесь..." oninput="handleInput('gs')" onkeydown="handleHotkeys(event, 'gs-input')" onscroll="syncEditorScroll('gs-input', 'gs-highlight-single')"># Редактор разметки
 Добро пожаловать в генератор разметки.
 
 ## Примеры элементов:
@@ -374,6 +574,7 @@
 * Поддерживаются стандартные элементы списков, `код`, и цитаты.
 
 > Умная синхронизация контента работает на лету.</textarea>
+                </div>
             </div>
             <div id="panel-gs-live" class="gs-panel">
                 <div id="gs-preview" class="gs-preview"></div>
@@ -392,7 +593,7 @@
             <tr>
                 <td class="fie-col">
                     <div class="fie-label">Write</div>
-                    <textarea id="fie-input" class="fie-editor" oninput="handleInput('fie')"># FIE11 Режим
+                    <textarea id="fie-input" class="fie-editor" oninput="handleInput('fie')" onkeydown="handleHotkeys(event, 'fie-input')"># FIE11 Режим
 Супер простой белый дизайн. Все элементы управления оптимизированы для старых систем.
 
 ## Базовые теги:
@@ -405,6 +606,20 @@
                 </td>
             </tr>
         </table>
+    </div>
+
+    <!-- Модальное окно тем -->
+    <div id="theme-modal" class="theme-market-modal" onclick="closeThemeMarket()">
+        <div class="theme-market-content" onclick="event.stopPropagation()">
+            <div class="theme-market-header">
+                <h3>Кастомные темы GS26</h3>
+                <button class="theme-market-close" onclick="closeThemeMarket()">&times;</button>
+            </div>
+            <p style="color: #8e8e93; font-size: 14px; margin-bottom: 20px; line-height: 1.5;">
+                Нажмите кнопку ниже, чтобы скачать шаблонный конфигурационный файл темы. После этого вы будете автоматически перенаправлены на страницу публикации тем!
+            </p>
+            <button class="btn-big-action" onclick="downloadTemplateAndRedirect()">Добавить кастомную тему!</button>
+        </div>
     </div>
 
     <script>
@@ -493,13 +708,17 @@
             var slider = document.getElementById('ios-slider');
             var tabWrite = document.getElementById('tab-gs-write');
             var tabLive = document.getElementById('tab-gs-live');
+            
             var panelWrite = document.getElementById('panel-gs-write');
             var panelLive = document.getElementById('panel-gs-live');
+
+            tabWrite.classList.remove('active');
+            tabLive.classList.remove('active');
 
             if (target === 'write') {
                 slider.style.transform = 'translate3d(0, 0, 0)';
                 tabWrite.classList.add('active');
-                tabLive.classList.remove('active');
+                
                 panelLive.classList.remove('panel-active');
                 panelLive.classList.add('panel-exit');
                 setTimeout(function() {
@@ -509,7 +728,7 @@
             } else {
                 slider.style.transform = 'translate3d(100%, 0, 0)';
                 tabLive.classList.add('active');
-                tabWrite.classList.remove('active');
+                
                 panelWrite.classList.remove('panel-active');
                 panelWrite.classList.add('panel-exit');
                 setTimeout(function() {
@@ -575,7 +794,8 @@
         }
 
         function pasteTemplate(type, rawData) {
-            var area = document.getElementById(type + '-input');
+            var targetId = type === 'gs' ? 'gs-input' : 'fie-input';
+            var area = document.getElementById(targetId);
             var cursorStart = area.selectionStart;
             var cursorEnd = area.selectionEnd;
             var oldText = area.value;
@@ -602,17 +822,163 @@
             out = out.replace(/<\/ul>\s*<ul>/g, '');
             out = out.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             out = out.replace(/\*(.*?)\*/g, '<em>$1</em>');
-            out = out.replace(/\`\`\`([\s\S]*?)\`\`\`/g, '<pre><code>$1</code></pre>');
+            
+            out = out.replace(/\`\`\`([\s\S]*?)\`\`\`/g, function(match, codeContent) {
+                var cleanCode = codeContent.trim();
+                return '<pre><code>' + codeContent + '</code><button class="pre-copy-btn" onclick="copyCodeBlock(this, `' + cleanCode.replace(/`/g, '\\`').replace(/'/g, "\\'") + '`)">Копировать</button></pre>';
+            });
+            
             out = out.replace(/\`(.*?)\`/g, '<code>$1</code>');
             out = out.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
             out = out.replace(/\n/g, '<br>');
             return out;
         }
 
+        function highlightMarkdown(text) {
+            var html = escapeHtmlChar(text);
+            html = html.replace(/(^|\n)(#.+)/g, '$1<span class="hl-header">$2</span>');
+            html = html.replace(/(^|\n)(\*.+)/g, '$1<span class="hl-list">$2</span>');
+            html = html.replace(/(\*\*.*?\*\*)/g, '<span class="hl-bold">$1</span>');
+            html = html.replace(/(\*.*?\*)/g, '<span class="hl-italic">$1</span>');
+            html = html.replace(/(`.*?`)/g, '<span class="hl-code">$1</span>');
+            return html + "\n";
+        }
+
+        function syncEditorScroll(textareaId, highlightId) {
+            var textarea = document.getElementById(textareaId);
+            var highlight = document.getElementById(highlightId);
+            highlight.scrollTop = textarea.scrollTop;
+            highlight.scrollLeft = textarea.scrollLeft;
+        }
+
         function handleInput(type) {
-            var src = document.getElementById(type + '-input').value;
-            var targetElement = document.getElementById(type + '-preview');
-            targetElement.innerHTML = internalMarkdownEngine(src);
+            if (type === 'gs') {
+                var src = document.getElementById('gs-input').value;
+                document.getElementById('gs-preview').innerHTML = internalMarkdownEngine(src);
+                document.getElementById('gs-highlight-single').innerHTML = highlightMarkdown(src);
+                syncEditorScroll('gs-input', 'gs-highlight-single');
+            } else {
+                var src = document.getElementById('fie-input').value;
+                document.getElementById('fie-preview').innerHTML = internalMarkdownEngine(src);
+            }
+        }
+
+        function handleHotkeys(event, textareaId) {
+            if (event.ctrlKey || event.metaKey) {
+                var key = event.key.toLowerCase();
+                if (key === 'b' || key === 'i' || key === 'k') {
+                    event.preventDefault();
+                    var area = document.getElementById(textareaId);
+                    var start = area.selectionStart;
+                    var end = area.selectionEnd;
+                    var text = area.value;
+                    var selected = text.substring(start, end);
+                    var replacement = "";
+
+                    if (key === 'b') {
+                        replacement = "**" + (selected || "текст") + "**";
+                    } else if (key === 'i') {
+                        replacement = "*" + (selected || "текст") + "*";
+                    } else if (key === 'k') {
+                        replacement = "[" + (selected || "текст") + "](url)";
+                    }
+
+                    area.value = text.substring(0, start) + replacement + text.substring(end);
+                    area.selectionStart = start + replacement.length;
+                    area.selectionEnd = start + replacement.length;
+                    
+                    var type = textareaId === 'gs-input' ? 'gs' : 'fie';
+                    handleInput(type);
+                }
+            }
+        }
+
+        function getActiveMarkdown() {
+            return activeMode === 'gs26' ? document.getElementById('gs-input').value : document.getElementById('fie-input').value;
+        }
+
+        function exportFile(format) {
+            var mdContent = getActiveMarkdown();
+            var filename = "document." + format;
+            var content = "";
+            var mime = "text/plain";
+
+            if (format === 'md') {
+                content = mdContent;
+            } else if (format === 'html') {
+                content = '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>Exported HTML</title>\n' +
+                          '<style>body{font-family:sans-serif;padding:20px;background:#121214;color:#fff;}' +
+                          '.cardboard-badge{background-color:#d2b48c;color:#3e2723;border:2px dashed #8d6e63;padding:6px 12px;display:inline-block; font-family:monospace;}' +
+                          'code{background:#222224;padding:3px 6px;border-radius:6px;color:#ffb347;}' +
+                          'pre{background:#1c1c1e;padding:14px;border-radius:10px;border:1px solid #222224;}' +
+                          'a{color:#0a84ff;}</style>\n</head>\n<body>\n' + 
+                          internalMarkdownEngine(mdContent) + '\n</body>\n</html>';
+                mime = "text/html";
+            }
+
+            var blob = new Blob([content], { type: mime + ";charset=utf-8;" });
+            var link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function copyRenderedHTML() {
+            var mdContent = getActiveMarkdown();
+            var rendered = internalMarkdownEngine(mdContent);
+            navigator.clipboard.writeText(rendered).then(function() {
+                alert("HTML-код скопирован в буфер обмена!");
+            });
+        }
+
+        function copyCodeBlock(button, codeText) {
+            navigator.clipboard.writeText(codeText).then(function() {
+                button.innerText = "Скопировано!";
+                setTimeout(function() { button.innerText = "Копировать"; }, 2000);
+            });
+        }
+
+        /* --- МАГАЗИН ТЕМ: СКАЧИВАНИЕ И РЕДИРЕКТ --- */
+        function openThemeMarket() {
+            document.getElementById('theme-modal').classList.add('active');
+        }
+
+        function closeThemeMarket() {
+            document.getElementById('theme-modal').classList.remove('active');
+        }
+
+        function downloadTemplateAndRedirect() {
+            // Тело базового шаблона theme.css
+            var cssTemplate = "/* ========================================================\n" +
+                              "   TEMPLATE THEME FOR GS26 (md.web)\n" +
+                              "   ======================================================== */\n\n" +
+                              "body {\n" +
+                              "    background-color: #0d0e15 !important;\n" +
+                              "    color: #e2e8f0 !important;\n" +
+                              "}\n\n" +
+                              ".theme-gs26 {\n" +
+                              "    background: rgba(20, 21, 33, 0.6) !important;\n" +
+                              "    border-radius: 24px !important;\n" +
+                              "    border: 1px solid #2d3149 !important;\n" +
+                              "}\n\n" +
+                              ".ios-slider {\n" +
+                              "    background-color: #7928ca !important;\n" +
+                              "    background-image: linear-gradient(135deg, #7928ca 0%, #ff0080 100%) !important;\n" +
+                              "}";
+
+            // Генерация Blob и скачивание файла theme.css
+            var blob = new Blob([cssTemplate], { type: "text/css;charset=utf-8;" });
+            var link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", "theme.css");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Мгновенный редирект на нужный Issue в гитхабе
+            window.location.href = "https://github.com/JunDevX/md.web/issues/1";
         }
     </script>
 </body>
